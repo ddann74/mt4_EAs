@@ -72,8 +72,35 @@ Tracking against docs/PRD.md §9 success criteria.
       indicator (7/7) as part of each indicator's own test file, not a
       separate consolidated file (a reasonable deviation from the PRD's
       literal package layout in §8; the coverage itself is complete).
+- [x] Downtrend hand-computed coverage for ADX and RVI — the original
+      hand-derivation tests only covered an uptrend (a real gap: the
+      -DM/negative-RVI branches were only exercised by the incremental
+      and `ta` cross-checks, which prove internal consistency, not
+      correctness against an independent derivation). Added
+      `tiny_downtrend_df()` and mirrored both tests.
+- [x] A real-bars (not synthetic-Series) end-to-end test for the RVI
+      trigger: builds an actual decline-then-recovery OHLCV sequence and
+      confirms rvi() → rvi_trigger() fires LONG on it, closing the gap
+      where trigger tests only fed hand-built RVI Series directly into
+      rvi_trigger().
+- [x] `pipeline.py` — `compute_all_indicators(df)` and
+      `entry_signal()`/`exit_fired()` variant dispatch, tying every
+      module together into one usable surface. Pure composition, no new
+      math; tested for correct column shape, no input mutation, and
+      correct routing per variant. `tests/test_pipeline.py` (5 tests).
+- [x] `mypy xauusd_indicators --ignore-missing-imports` — clean. Started
+      at 22 errors, all genuine type-safety gaps (not noise): several
+      were the state-machine invariant "this field can't actually be
+      None here" not being visible to the type checker across dataclass
+      field reads, fixed with explicit `assert ... is not None`
+      statements that double as runtime guards, not just type-checker
+      placation. One was a real annotation bug in `RviState`
+      (`list[float] = None` instead of `list[float] | None = None`).
+- [x] `pyproject.toml` + `.github/workflows/ci.yml` — added so this
+      becomes a real installable package and gets CI test+mypy runs the
+      moment it has a remote to push to (currently local-only).
 
-**61/61 tests passing.**
+**69/69 tests passing, mypy clean.**
 
 ## Still open (blocking full "done", per docs/PRD.md §6)
 

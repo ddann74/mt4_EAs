@@ -62,8 +62,8 @@ def rvi_trigger(rvi_series: pd.Series) -> pd.Series:
 @dataclass
 class RviState:
     period: int = 14
-    _co_history: list[float] = None  # close-open per recent bar
-    _hl_history: list[float] = None  # high-low per recent bar
+    _co_history: list[float] | None = None  # close-open per recent bar
+    _hl_history: list[float] | None = None  # high-low per recent bar
     armed: str | None = None
 
     def __post_init__(self):
@@ -75,6 +75,7 @@ class RviState:
 
 def rvi_update(state: RviState, bar: Bar) -> tuple[tuple[float | None, Signal | None], RviState]:
     """Returns ((rvi_value_or_None, trigger_signal_or_None), new_state)."""
+    assert state._co_history is not None and state._hl_history is not None  # RviState.__post_init__ guarantees this
     co_history = state._co_history + [bar.close - bar.open]
     hl_history = state._hl_history + [bar.high - bar.low]
     if len(co_history) > state.period:

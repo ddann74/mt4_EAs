@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          # ta's sdist build hits a Debian-patched-distutils/setuptools
+          # conflict on some runner images - see README.md for why this
+          # env var is needed. Harmless if the runner doesn't need it.
+          SETUPTOOLS_USE_DISTUTILS=stdlib pip install ta pytest mypy
+      - name: Run tests
+        run: PYTHONPATH=. pytest tests/ -v
+      - name: Type check
+        run: mypy xauusd_indicators --ignore-missing-imports

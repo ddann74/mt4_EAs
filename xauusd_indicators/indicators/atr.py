@@ -85,6 +85,7 @@ def atr_update(state: AtrState, bar: Bar) -> tuple[float | None, AtrState]:
             new_state._warmup = []
         return new_state.smoothed, new_state
 
+    assert state.smoothed is not None  # guaranteed by the `if new_state.smoothed is None` branch above
     new_state.smoothed = (state.smoothed * (state.period - 1) + tr) / state.period
     return new_state.smoothed, new_state
 

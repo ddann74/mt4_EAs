@@ -140,9 +140,17 @@ def parabolic_sar_update(state: ParabolicSarState, bar: Bar) -> tuple[float | No
         )
         return None, new_state
 
-    # Bar index >= 2: history == [bar_{i-2}, bar_{i-1}].
+    # Bar index >= 2: history == [bar_{i-2}, bar_{i-1}]. By this point
+    # af/up_trend_high/down_trend_low/prev_psar were all seeded by the
+    # len(history) < 2 branch above on a prior call, so none of them
+    # can still be None - asserted here so the arithmetic below is
+    # type-checked, not just trusted.
     prev_prev_bar, prev_bar = history[0], history[1]
     up_trend = state.up_trend
+    assert state.af is not None
+    assert state.up_trend_high is not None
+    assert state.down_trend_low is not None
+    assert state.prev_psar is not None
     af = state.af
     up_trend_high = state.up_trend_high
     down_trend_low = state.down_trend_low

@@ -100,6 +100,7 @@ def adx_update(state: AdxState, bar: Bar) -> tuple[float | None, AdxState]:
         plus_dm = 0.0
         minus_dm = 0.0
     else:
+        assert state.prev_low is not None  # prev_high/prev_low are always set together
         up_move = bar.high - state.prev_high
         down_move = state.prev_low - bar.low
         plus_dm = up_move if (up_move > down_move and up_move > 0) else 0.0
@@ -127,12 +128,14 @@ def adx_update(state: AdxState, bar: Bar) -> tuple[float | None, AdxState]:
             new_state._dm_warmup_plus = []
             new_state._dm_warmup_minus = []
     else:
+        assert state.smoothed_plus_dm is not None and state.smoothed_minus_dm is not None
         new_state.smoothed_plus_dm = (state.smoothed_plus_dm * (state.period - 1) + plus_dm) / state.period
         new_state.smoothed_minus_dm = (state.smoothed_minus_dm * (state.period - 1) + minus_dm) / state.period
 
     if atr_value is None or new_state.smoothed_plus_dm is None:
         return None, new_state
 
+    assert new_state.smoothed_minus_dm is not None  # set alongside smoothed_plus_dm above
     plus_di = 100 * new_state.smoothed_plus_dm / atr_value
     minus_di = 100 * new_state.smoothed_minus_dm / atr_value
     denom = plus_di + minus_di
@@ -145,5 +148,6 @@ def adx_update(state: AdxState, bar: Bar) -> tuple[float | None, AdxState]:
             new_state._dx_warmup = []
         return new_state.smoothed_dx, new_state
 
+    assert state.smoothed_dx is not None  # guaranteed by the `if new_state.smoothed_dx is None` branch above
     new_state.smoothed_dx = (state.smoothed_dx * (state.period - 1) + dx) / state.period
     return new_state.smoothed_dx, new_state

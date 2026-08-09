@@ -6,7 +6,7 @@ import math
 
 import pandas as pd
 
-from tests.fixtures import df_to_bars, synthetic_series_df, tiny_uptrend_df
+from tests.fixtures import df_to_bars, synthetic_series_df, tiny_downtrend_df, tiny_uptrend_df
 from xauusd_indicators.indicators.rvi import RviState, rvi, rvi_trigger, rvi_update
 from xauusd_indicators.types import Signal
 
@@ -21,6 +21,53 @@ def test_rvi_hand_computed_on_tiny_fixture():
     assert result.iloc[:13].isna().all()
     for i in range(13, len(df)):
         assert math.isclose(result.iloc[i], 0.5, rel_tol=1e-9), f"bar {i}"
+
+
+def test_rvi_hand_computed_on_tiny_downtrend_fixture():
+    df = tiny_downtrend_df()
+    # close-open = -0.5 on every bar, high-low = 1.0 on every bar (see
+    # fixtures.tiny_downtrend_df) -> RVI = -0.5 constant. Closes the gap
+    # where only the positive-RVI branch had an independent hand check.
+    result = rvi(df, period=14)
+    for i in range(13, len(df)):
+        assert math.isclose(result.iloc[i], -0.5, rel_tol=1e-9), f"bar {i}"
+
+
+def test_rvi_trigger_fires_long_from_real_bars_not_just_a_synthetic_rvi_series():
+    """The trigger-firing tests elsewhere in this file feed a
+    hand-constructed RVI Series directly into rvi_trigger(), which
+    tests the state machine in isolation but never proves real OHLCV
+    bars, run through rvi() first, actually produce a dip-then-recovery
+    RVI path in practice. This builds one: a decline (driving RVI
+    negative and past -0.20) followed by a sharp bar-over-bar recovery
+    in the close-open spread (pulling RVI back through -0.20), using
+    actual bars fed through rvi() -> rvi_trigger(), end to end."""
+    n = 20
+    rows = []
+    price = 100.0
+    for i in range(n):
+        if i < 15:
+            # Steady decline: every bar closes below its open.
+            o = price
+            c = o - 0.6
+            h = o + 0.1
+            low = c - 0.1
+        else:
+            # Sharp recovery: every bar closes well above its open.
+            o = price
+            c = o + 1.5
+            h = c + 0.1
+            low = o - 0.1
+        rows.append({"open": o, "high": h, "low": low, "close": c, "volume": 100})
+        price = c
+    df = pd.DataFrame(rows)
+
+    series = rvi(df, period=14)
+    triggers = rvi_trigger(series)
+
+    assert series.iloc[13] <= -0.20, "expected the decline to have pushed RVI past -0.20 by bar 13"
+    fired = [i for i, t in enumerate(triggers) if t == Signal.LONG]
+    assert fired, "expected the recovery to eventually cross RVI back through -0.20 and fire LONG"
 
 
 def test_rvi_trigger_fires_long_on_dip_then_cross_back():

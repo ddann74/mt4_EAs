@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xauusd-indicators"
+version = "0.1.0"
+description = "Indicator and signal-composition library for the XAUUSD strategy report (see docs/PRD.md)"
+requires-python = ">=3.11"
+dependencies = [
+    "pandas>=2.0",
+    "numpy>=1.24",
+]
+
+[tool.setuptools.packages.find]
+include = ["xauusd_indicators*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

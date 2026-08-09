@@ -35,6 +35,28 @@ def tiny_uptrend_df() -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def tiny_downtrend_df() -> pd.DataFrame:
+    """30 bars, the mirror image of tiny_uptrend_df() - strictly
+    decreasing highs/lows/closes, same fixed 1.0 true range every bar
+    by construction. Exists because the hand-computed ADX/RVI tests
+    originally only covered an uptrend (a real gap: -DM/negative-RVI
+    branches were untested by hand-derivation, only by the
+    incremental-vs-vectorized and library cross-check tests, which
+    prove internal consistency but not correctness against an
+    independent derivation)."""
+    n = 30
+    base = 130.0
+    rows = []
+    for i in range(n):
+        o = base - i
+        c = o - 0.5
+        h = o + 0.2
+        low = c - 0.3
+        v = 1000 + i
+        rows.append({"open": o, "high": h, "low": low, "close": c, "volume": v})
+    return pd.DataFrame(rows)
+
+
 def synthetic_series_df(n: int = 300, seed: int = 42) -> pd.DataFrame:
     """A longer, randomized-but-reproducible OHLCV series (geometric
     random walk with occasional regime shifts) - used for

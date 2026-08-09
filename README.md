@@ -37,6 +37,14 @@ Two real bugs were found and fixed during development — see
 caught by the incremental-vs-vectorized cross-check test; a missing
 bar of history in the incremental Parabolic SAR).
 
+`pipeline.py` ties everything together for actual use:
+`compute_all_indicators(df)` returns a copy of a DataFrame with every
+indicator as a column, and `entry_signal(df, Variant.SECTION_6)` /
+`exit_fired(...)` dispatch to the right variant's module without the
+caller needing to know the internal layout. It's pure composition/
+dispatch - no new math, no new correctness claims beyond what each
+underlying module already proves.
+
 ## Signal composition
 
 | Variant | Entry | Exit |
@@ -77,9 +85,12 @@ Then:
 
 ```bash
 PYTHONPATH=. pytest tests/ -v
+mypy xauusd_indicators --ignore-missing-imports
 ```
 
-61/61 tests passing as of the last update to this file.
+69/69 tests passing, mypy clean, as of the last update to this file.
+Runs in CI on every push (`.github/workflows/ci.yml`) once this repo
+has a remote.
 
 ## What's NOT in this project
 
