@@ -247,31 +247,60 @@ tests/
 
 ## 9. Success criteria (maps 1:1 to runnable tests)
 
-- [ ] `atr()`/`volatility_ratio()` match hand-computed values on a fixed
+- [x] `atr()`/`volatility_ratio()` match hand-computed values on a fixed
       synthetic series AND match `pandas-ta`'s ATR on the same series.
-- [ ] `adx()` matches hand-computed values AND `pandas-ta`'s ADX.
-- [ ] `rvi()` matches hand-computed values per the §6.1-confirmed
-      formula (BLOCKED until §6.1 answered).
-- [ ] RVI setup-then-cross trigger correctly fires/doesn't fire on
-      engineered synthetic sequences per the §6.2-confirmed state
-      machine (BLOCKED until §6.2 answered).
-- [ ] `roc()` matches hand-computed values AND a reference library.
-- [ ] `obv()` and its slope match hand-computed values, slope lookback
-      per §6.3 (default 10, pending confirmation).
-- [ ] `macd_histogram()` matches hand-computed values AND a reference
-      library.
-- [ ] `parabolic_sar()` matches hand-computed values AND a reference
+      `tests/test_atr.py`.
+- [x] `adx()` matches hand-computed values AND `pandas-ta`'s ADX (used
+      as a sanity check only, per §2.2/PROGRESS.md - `ta`'s own
+      implementation has a documented off-by-one quirk).
+      `tests/test_adx.py`.
+- [x] `rvi()` matches hand-computed values per the §6.1 formula. No
+      longer blocked: user chose "use my inferred formula" when asked -
+      implemented and tested against that reading, still UNCONFIRMED
+      against the report's true original intent (no way to verify that
+      without the report author). `tests/test_rvi.py`.
+- [x] RVI setup-then-cross trigger correctly fires/doesn't fire on
+      engineered synthetic sequences per the §6.2 state machine. No
+      longer blocked: user said "whatever the report says," and the
+      report genuinely specifies nothing beyond the phrase itself, so
+      the reach-then-cross-back reading was implemented and tested -
+      same UNCONFIRMED-but-not-blocked status as RVI's formula.
+      `tests/test_rvi.py`.
+- [x] `roc()` matches hand-computed values AND a reference library.
+      `tests/test_roc.py`.
+- [x] `obv()` and its slope match hand-computed values, slope lookback
+      per §6.3 (default 10, still pending confirmation but implemented
+      and tested against that default). `tests/test_obv.py`.
+- [x] `macd_histogram()` matches hand-computed values AND a reference
+      library (once a documented, numerically-verified warmup artifact
+      in the reference library's own architecture decays - see
+      PROGRESS.md). `tests/test_macd.py`.
+- [x] `parabolic_sar()` matches hand-computed values AND a reference
       library over a multi-bar trend-reversal sequence.
-- [ ] Section 2 entry signal fires only when all three conditions hold,
+      `tests/test_parabolic_sar.py`.
+- [x] Section 2 entry signal fires only when all three conditions hold,
       on engineered synthetic bars covering each combination.
-- [ ] Section 6 entry signal additionally requires all three momentum
+      `tests/test_signals_section2.py`.
+- [x] Section 6 entry signal additionally requires all three momentum
       filters to agree; tested with one-disagrees-per-filter cases.
-- [ ] Section 6a entry signal additionally requires SAR agreement.
-- [ ] Section 7 exit fires correctly on $15 target and on 30-bar cutoff,
-      independently and combined; exit composition per §6.5 (BLOCKED
-      until answered).
-- [ ] Every indicator/signal has a passing
-      incremental-matches-vectorized test (§4).
-- [ ] README states plainly: what's implemented, what's tested against
-      what (synthetic-only, per §5), and which of §6's open questions
-      remain unresolved.
+      `tests/test_signals_section6.py`.
+- [x] Section 6a entry signal additionally requires SAR agreement.
+      `tests/test_signals_section6a.py`.
+- [x] Section 7 exit fires correctly on $15 target and on 30-bar cutoff,
+      independently and combined; exit composition per §6.5. No longer
+      blocked: implemented per the "hard-stop/RVI-reversal stay active,
+      only trailing stop is replaced" reading, documented as
+      UNCONFIRMED in `signals/section7.py`. `tests/test_signals_section7.py`.
+- [x] Every indicator/signal has a passing
+      incremental-matches-vectorized test (§4). Present in every
+      indicator's own test file (7/7).
+- [x] README states plainly: what's implemented, what's tested against
+      what, and which of §6's open questions remain unresolved.
+
+**All 14 items done as of this update** - see PROGRESS.md for the
+full, current status including real-data validation (§5) added after
+this checklist was originally written. "Done" here means "implemented
+and tested against a specific, documented interpretation" - it does
+NOT mean the 5 UNCONFIRMED interpretations in §6 have been verified
+against the report's actual original intent, only that they're no
+longer blocking further work, per the user's explicit choices.
