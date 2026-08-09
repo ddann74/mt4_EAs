@@ -137,29 +137,45 @@ the way pandas naturally works. To avoid a full rewrite at port time:
   section only constrains today's design so that phase doesn't require
   reworking the math.
 
-## 5. Data availability (verified while writing this PRD)
+## 5. Data availability
 
-Real XAUUSD M1 OHLCV data for the report's window (Dec 15 2025 – May 8
-2026) is **not reachable from this build environment** — outbound
-requests to Yahoo Finance, Dukascopy, and a generic FX data API all
-failed to connect (same network-block pattern as this account's other
-project, which found youtube.com similarly blocked). This is a sandbox
-limitation, not a design choice.
+**UPDATE — real data was supplied and used.** At PRD-writing time, real
+XAUUSD M1 OHLCV data for the report's window (Dec 15 2025 – May 8 2026)
+was not reachable from the build environment (outbound requests to
+Yahoo Finance, Dukascopy, and a generic FX data API all failed to
+connect). The user subsequently supplied a real M1 OHLCV CSV covering
+exactly that window (139,978 bars, Dec 15 2025 – May 8 2026) - see
+`PROGRESS.md` for the full validation findings. Summary: no OHLC
+invariant violations or data-quality issues in the source file; every
+indicator's warmup-region NaN count on the real data matched its own
+documented formula exactly (e.g. ADX's 26-bar warmup, volatility
+ratio's 62-bar warmup); no infinite/malformed values produced; every
+signal-composition variant ran end-to-end without error, producing
+plausible, non-degenerate entry counts (Section 2: 981 LONG / 546
+SHORT over ~140k bars). This proves the formulas behave correctly on
+real data, not just synthetic fixtures - it does **not** validate
+profitability, ruin probability, or anything the source report's own
+backtest/bootstrap pipeline claims (§0 - still explicitly out of
+scope), and it does not re-derive expected values by hand against real
+data (impractical at this volume) - the hand-derivations in §2's tests
+remain the correctness proof; this is a real-data sanity/regression
+check layered on top, per `tests/test_real_data_smoke.py`.
 
-**Fallback (what this project actually does):** every indicator and
-signal test uses **synthetic OHLCV fixtures with hand-computed expected
-values**, built and checked step-by-step in the test itself (e.g., a 20-
-bar series with known highs/lows/closes, ATR/ADX/RVI computed by hand or
-via an independent formula walk-through in the test's own comments).
-Cross-checks against `pandas-ta`/`ta` (§2) run on the same synthetic
-fixtures, not real market data. **This means: the tests prove the
-formulas are implemented correctly. They do not prove real-world
-behavior on genuine XAUUSD M1 data, because none was available.** If the
-user later supplies real OHLCV data (e.g., exported from an MT4
-terminal, which does have real broker access), a follow-up task should
-re-run the same test suite against it and report honestly whether real
-data changes anything (it shouldn't, if the formulas are correct, but
-this is explicitly unverified until that happens).
+The real CSV itself is not committed to this repo (gitignored,
+`data/*.csv`) - its licensing/redistribution terms aren't this
+project's to decide, same caution as the sibling project's transcript-
+copyright policy. `tests/test_real_data_smoke.py` skips gracefully
+when the file isn't present locally, and documents exactly where to
+place it to re-run the validation.
+
+**Fallback (what most of this project's tests still do):** every
+indicator and signal *correctness* test uses **synthetic OHLCV fixtures
+with hand-computed expected values**, built and checked step-by-step in
+the test itself. Cross-checks against `pandas-ta`/`ta` (§2) also run on
+synthetic fixtures. That division of labor is intentional: synthetic
+fixtures prove the formulas are *right*; the real-data smoke test proves
+they behave *sanely* at real-world scale and value ranges. Neither
+alone would be sufficient.
 
 ## 6. Open questions — must be resolved by the user, not guessed
 

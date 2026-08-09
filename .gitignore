@@ -2,3 +2,9 @@ __pycache__/
 *.pyc
 .pytest_cache/
 *.egg-info/
+
+# Real market data goes here for local validation (see
+# tests/test_real_data_smoke.py) but is never committed - provenance/
+# licensing of a real price dataset isn't this project's to redistribute,
+# same caution as the sibling project's transcript-copyright policy.
+/data/*.csv

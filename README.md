@@ -8,13 +8,19 @@ the correctness tests that prove the math is right.
 **What this project proves, and what it doesn't:** every indicator and
 signal-composition function here is verified against hand-derived
 arithmetic and/or an independent reference library (`ta`) on synthetic
-data. **None of it has been run against real XAUUSD market data** — no
-real data source was reachable from the environment this was built in
-(see `docs/PRD.md` §5). This library also does **not** reproduce, claim,
-or validate the source report's return/ruin-probability numbers
-(+21.48%/month, 2.0% ruin, etc.) — that would require the report's own
-backtest + bootstrap pipeline, which is explicitly out of scope (`docs/PRD.md`
-§0).
+data. **It has also now been run against 139,978 bars of real XAUUSD M1
+data covering the report's exact window (Dec 15 2025 – May 8 2026)** —
+no crashes, no unexpected NaN/infinities, every warmup length matched
+its own documentation exactly, ADX stayed within [0,100] throughout —
+see `PROGRESS.md` for full findings. That proves the formulas behave
+correctly at real-world scale; it does **not** validate profitability,
+ruin probability, or reproduce anything from the source report's own
+return/ruin-probability numbers (+21.48%/month, 2.0% ruin, etc.) — that
+would require the report's own backtest + bootstrap pipeline, which is
+explicitly out of scope (`docs/PRD.md` §0). The real dataset itself
+isn't committed here (`data/*.csv` is gitignored — its licensing isn't
+this project's to decide); `tests/test_real_data_smoke.py` documents
+exactly how to re-run the validation locally.
 
 Full requirements, scope, and the 5 UNCONFIRMED interpretations this
 project had to make where the source report was ambiguous: see
@@ -76,10 +82,10 @@ python scripts/demo.py --csv path/to/data.csv  # real OHLCV data you supply (ope
 
 Runs every indicator + all 4 signal variants end to end and prints a
 summary. This is the fastest way to see real output without writing any
-code - and the natural place to point real XAUUSD data at, once you
-have some (e.g. exported from an MT4 terminal), to finally close the
-"never run against real data" gap noted throughout this README and
-`docs/PRD.md` §5.
+code. Already run against real data (see above) — on the supplied
+139,978-bar real window, Section 2 produced 981 LONG / 546 SHORT
+signals, Section 6 (tightest filter) 48/48, Section 6a 376/199, Section
+7 exactly matching Section 2 as it should (same entry function).
 
 ## Running the tests
 
@@ -102,15 +108,23 @@ PYTHONPATH=. pytest tests/ -v
 mypy xauusd_indicators --ignore-missing-imports
 ```
 
-69/69 tests passing, mypy clean, as of the last update to this file.
-Runs in CI on every push (`.github/workflows/ci.yml`) once this repo
-has a remote.
+75/75 tests passing (69 synthetic/hand-computed + 6 real-data smoke,
+the latter auto-skip without a local data file), mypy clean, as of the
+last update to this file. Runs in CI on every push
+(`.github/workflows/ci.yml`) once this repo has a remote — the 6
+real-data tests will skip there too, since the data file is
+intentionally never committed.
+
+To re-run the real-data validation yourself: place an OHLCV CSV
+(`open,high,low,close,volume` columns) at `data/xauusd_m1_real.csv`, or
+point `XAUUSD_REAL_CSV` at a different path, then run
+`pytest tests/test_real_data_smoke.py -v` or `scripts/demo.py --csv`.
 
 ## What's NOT in this project
 
 - No backtest engine, P&L simulation, bootstrap/Monte-Carlo validation,
   position sizing, order execution, or broker/MT4 integration.
 - No claim that this code reproduces the source report's performance
-  numbers.
-- No validation against real market data (none was reachable while
-  building this).
+  numbers, or that the real-data entry-signal counts above represent a
+  profitable (or even sensible) trading outcome — only that the code
+  runs correctly and produces sane values.

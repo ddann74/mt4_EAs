@@ -120,8 +120,52 @@ Tracking against docs/PRD.md §9 success criteria.
       `compute_all_indicators`/`entry_signal`/`exit_fired`/`Variant`
       directly, so `import xauusd_indicators as xi; xi.compute_all_indicators(df)`
       works without knowing the internal module layout.
+- [x] **Real XAUUSD M1 data validation.** The user supplied a real
+      OHLCV CSV: 139,978 M1 bars, Dec 15 2025 – May 8 2026 - exactly the
+      report's stated window. Findings:
+      - Source data quality: no OHLC invariant violations (`high >=
+        low/open/close`, `low <= open/close`), no zero/negative volume,
+        no null values, no duplicate timestamps. Clean.
+      - Ran the full pipeline (`compute_all_indicators` + all 4
+        variants' `entry_signal`) against all 139,978 bars: no crashes,
+        no exceptions. Total runtime ~2m20s (Python-loop-based Wilder
+        recurrences on 140k rows - not optimized for speed, correctness
+        was the priority per the PRD).
+      - Every indicator's warmup-region NaN count matched its own
+        documented formula exactly: ATR=13, volatility_ratio=62,
+        ADX=26, RVI=13, ROC=10, OBV_slope=10, MACD_histogram=33,
+        Parabolic_SAR=2. No unexpected NaN, no infinities anywhere.
+      - ADX stayed within [0, 100] for all 139,952 defined values (a
+        real invariant this indicator must satisfy - confirmed on real
+        data, not just the synthetic uptrend/downtrend fixtures).
+      - Entry signal counts over the real window: Section 2 - 981 LONG
+        / 546 SHORT. Section 6 (tightest filter) - 48/48. Section 6a -
+        376/199. Section 7 - identical to Section 2 (981/546), exactly
+        as it should be since they share the same entry function -
+        this is itself a correctness cross-check that held on real
+        data.
+      - **What this does and doesn't prove**: proves the formulas
+        produce sane, well-behaved output at real-world scale and value
+        ranges (gold traded $4,102–$5,597 over this window in the
+        supplied data). Does NOT validate profitability, ruin
+        probability, or reproduce anything from the source report's own
+        backtest/bootstrap pipeline - still explicitly out of scope
+        (PRD §0). Does NOT hand-verify specific real-data indicator
+        values (impractical at 140k rows) - the synthetic
+        hand-computed tests remain the actual correctness proof; this
+        is a sanity/regression layer on top of that, not a replacement
+        for it.
+      - The real CSV is NOT committed to this repo (`data/*.csv` is
+        gitignored) - its licensing/redistribution terms aren't this
+        project's to decide, same caution as the sibling project's
+        transcript-copyright policy.
+      - `tests/test_real_data_smoke.py` (6 tests) codifies all of the
+        above as a repeatable check: skips gracefully when the data
+        file isn't present (e.g. a fresh clone, or CI, which has no
+        access to it), runs for real when it is.
 
-**69/69 tests passing, mypy clean, bandit reviewed.**
+**75/75 tests passing (69 synthetic/hand-computed + 6 real-data
+smoke), mypy clean, bandit reviewed.**
 
 ## Still open (blocking full "done", per docs/PRD.md §6)
 
@@ -144,14 +188,16 @@ against the report's actual intent, not verified:
    standard 100oz/lot XAUUSD contract size, which the report never
    states.
 
-**None of this has been validated against real XAUUSD M1 data** (§5) —
-no real data source was reachable from this build environment. Every
-test above uses synthetic, hand-computed, or library-cross-checked
-fixtures. If the user later supplies real OHLCV data (e.g. exported
-from an MT4 terminal), re-running this suite against it is the natural
-next step, and is expected to change nothing about correctness (the
-formulas don't depend on which data they run on) — but that is
-unverified until it actually happens.
+**Real XAUUSD M1 data validation is now done** (§5, above) - the gap
+that used to sit here is closed for "does this run correctly and behave
+sanely on real data." What real-data validation does NOT cover: the 5
+interpretation gaps above are about the report's *intent*, and no
+amount of running against real price data resolves them - only the
+report's original author/strategy file can. The real-data run also
+doesn't hand-verify specific indicator values (the synthetic
+hand-computed tests are still the correctness proof) or say anything
+about whether the signals these interpretations produce would have been
+profitable.
 
 **Not started**: the MQL4/MT4 port itself (explicit non-goal of this
 phase, PRD §4/§0).
