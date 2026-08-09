@@ -1,0 +1,322 @@
+--- PAGE 1 ---
+XAUUSD	Strategy	Analysis:
+Validated	Results	&	$1,000
+Account	Projections
+Instrument:
+	
+XAUUSD	(Gold)	|	
+Data:
+	
+M1	OHLCV,	Dec	15	2025	–	May
+8	2026	(~5	months)	
+Methodology:
+	
+Real-data	backtest	→	bootstrap
+validation	(100+	resampled	alternate	6-month	histories	per	strategy)
+→	neighborhood	robustness	check	where	applicable
+How	to	read	this	report
+Every	number	below	comes	from	a	strategy	that	was	tested	against
+many	simulated	alternate	histories
+,	not	just	the	one	5-month
+sample	we	have	real	data	for.	This	matters	enormously:	across	this
+entire	analysis,	dozens	of	strategies	looked	excellent	on	the	single	real
+historical	sample	and	then	
+failed	catastrophically
+	
+(50-97%	chance
+of	wiping	the	account)	once	tested	against	resampled	alternate
+versions	of	similar	market	conditions.	Only	four	survived	that	test.
+Everything	in	this	report	is	one	of	those	four	—	nothing	here	is	a
+strategy	that	merely	“looked	good	once.”
+Monthly	ﬁgures	are	derived,	not	directly	measured.
+	
+Each
+bootstrap	test	covers	a	~6-month	period	(126	trading	days).	The	“%
+per	month”	ﬁgures	below	are	the	compounded	monthly	growth	rate
+implied	by	the	6-month	median	result	—	i.e.,	what	monthly	rate,
+compounded	6	times,	produces	the	tested	6-month	outcome.	These
+are	projections	built	from	a	validated	median,	not	independently	re-
+tested	month-by-month.
+The	Four	Validated	Strategies
+1.	Section	2	—	RVI	+	ADX	+	Volatility	(the	core	/
+default)
+Rules:
+	
+RVI(14)	custom	oscillator	(SMA-based,	not	standard	weighted
+RVI)	triggers	on	a	setup-then-cross	through	±0.20.	Requires	ADX(14)
+>	30	and	a	volatility	ratio	(ATR(14)	vs.	its	own	50-bar	average)	>	1.1
+to	conﬁrm.	Fixed	0.01	lot,	single	pyramid	add	capped	at	one	(only	into
+an	already-winning	position),	exit	via	hard	stop	/	trailing	stop	/	RVI
+reversal.
+Bootstrap	result	(100+	paths)
+Value
+Ruin	probability
+2.0%
+Median	6-month	return
++221.4%
+%	of	paths	proﬁtable
+96.0%
+Implied	monthly	rate
++21.48%/month
+$1,000	→	projected	trajectory:
+	
+M1	$1,215	→	M2	$1,476	→	M3
+$1,793	→	M4	$2,178	→	M5	$2,646	→	
+M6	$3,214
+2.	Section	6	—	+	ROC/OBV/MACD	momentum
+agreement	(best	of	the	four)
+--- PAGE 2 ---
+Rules:
+	
+Same	core	as	Section	2,	plus	three	additional	momentum-
+agreement	ﬁlters	(10-period	Rate	of	Change,	On-Balance-Volume
+slope,	MACD	histogram)	must	all	agree	with	trade	direction	before
+entry.
+Bootstrap	result	(100+	paths)
+Value
+Ruin	probability
+1.0%
+Median	6-month	return
++234.1%
+%	of	paths	proﬁtable
+97.0%
+Implied	monthly	rate
++22.27%/month
+$1,000	→	projected	trajectory:
+	
+M1	$1,223	→	M2	$1,495	→	M3
+$1,828	→	M4	$2,235	→	M5	$2,732	→	
+M6	$3,341
+Best	risk-adjusted	result	of	everything	tested	this	session	—	but
+requires	implementing	and	maintaining	three	extra	indicators	for	a
+modest	edge	over	Section	2.
+3.	Section	6a	—	+	Parabolic	SAR	(simplest	alternative
+to	Section	6)
+Rules:
+	
+Same	core	as	Section	2,	plus	Parabolic	SAR	trend	direction
+must	agree	with	the	trade	direction.	Ties	Section	6’s	improvement
+with	a	single	indicator	instead	of	three.
+Bootstrap	result	(100+	paths)
+Value
+Ruin	probability
+1.0%
+Median	6-month	return
++228.3%
+%	of	paths	proﬁtable
+96.0%
+Implied	monthly	rate
++21.91%/month
+$1,000	→	projected	trajectory:
+	
+M1	$1,219	→	M2	$1,486	→	M3
+$1,812	→	M4	$2,209	→	M5	$2,693	→	
+M6	$3,283
+Testing	showed	combining	SAR	with	Section	6’s	ROC/OBV/MACD
+stack	adds	nothing	further	—	pick	one,	not	both.
+4.	Section	7	—	Fast-Exit	/	Quick	In-and-Out
+Rules:
+	
+Same	entry	as	Section	2,	but	exits	on	a	small	ﬁxed	$15	proﬁt
+target	or	30-bar	(30-minute)	time	cutoﬀ	instead	of	a	trailing	stop.
+Trades	roughly	22	minutes	on	average	instead	of	the	longer	trend-
+following	holds	of	the	other	three.
+Bootstrap	result	(100+	paths)
+Value
+Ruin	probability
+0.0%
+	
+(lowest	of	the	four)
+Median	6-month	return
++124.1%
+%	of	paths	proﬁtable
+92.0%
+Implied	monthly	rate
++14.40%/month
+$1,000	→	projected	trajectory:
+	
+M1	$1,144	→	M2	$1,309	→	M3
+$1,497	→	M4	$1,713	→	M5	$1,959	→	
+M6	$2,241
+Lowest	return	of	the	four,	but	also	the	lowest	measured	ruin	risk	and
+the	fastest,	most	predictable	trade	turnover	—	a	real	trade-oﬀ,	not	a
+worse	version	of	the	others.
+--- PAGE 3 ---
+Side-by-side	summary
+Strategy
+Ruin
+%
+Monthly
+rate
+$1,000	→	6
+months
+Section	2	(default)
+2.0%
++21.48%
+$3,214
+Section	6
+(ROC+OBV+MACD)
+1.0%
++22.27%
+$3,341
+Section	6a	(Parabolic
+SAR)
+1.0%
++21.91%
+$3,283
+Section	7	(fast-exit)
+0.0%
++14.40%
+$2,241
+Read	this	next:	what’s	NOT	in	this	report,
+and	why	that	matters	more	than	what	is
+This	report	represents	the	
+survivors
+	
+of	an	extensive	search.	For
+honest	context,	here	is	everything	tested	and	rejected	across	this
+analysis,	all	of	which	either	failed	on	the	real	historical	data	outright
+or	looked	promising	and	then	failed	bootstrap	validation:
+The	original	martingale/grid	strategy
+	
+(RelFI-based,	arithmetic
+position	averaging	into	losing	trades):	93.2%	ruin	probability
+across	bootstrapped	histories.	This	was	the	starting	point	of	the
+whole	analysis	and	the	reason	the	more	careful,	validated
+approach	above	exists.
+Stochastic
+	
+(multiple	directional	pairings),	
+RSI
+,	
+Bollinger	%B
+,
+CCI
+,	
+Williams	%R
+,	
+Force	Index
+,	
+VWAP
+,	
+MFI	(Money	Flow
+Index)
+,	
+Ichimoku	(Tenkan/Kijun)
+,	
+Pivot	Points
+:	none	showed	a
+bootstrap-conﬁrmed	improvement;	several	looked	good	on	real
+data	and	then	failed	badly	under	resampling	(up	to	96%	ruin).
+Duration/persistence-based	mean	reversion
+	
+(“it’s	been
+extreme	too	long,	it	should	revert”):	60-97%	ruin	across	every
+tested	variant	—	essentially	the	gambler’s	fallacy	applied	to	price
+data.
+M5	(5-minute)	timeframe
+,	for	both	the	core	strategy	and	the
+SAR-enhanced	version:	failed	decisively	(45-68%	ruin)	even	after
+dedicated	re-tuning.	
+Every	strategy	in	this	report	is	M1-only.
+Elder’s	Triple	Screen
+	
+(multi-timeframe	trend/pullback/breakout
+system):	57-59%	ruin	once	bootstrap	tested,	despite	looking	like
+the	best	single	result	of	the	whole	session	on	real	data	(nearly	2.5x
+return).	The	likely	cause:	the	system’s	core	premise	needs	a
+genuinely	slow,	persistent	trend	(originally	designed	for
+weekly/daily	charts),	which	doesn’t	transfer	to	an	H1-tide/M1-
+execution	compression.
+Pure	Parabolic	SAR
+	
+(no	ADX	ﬁlter):	fails	across	every
+acceleration-factor	setting	tested	—	conﬁrms	SAR’s	known
+weakness	of	whipsawing	in	non-trending	conditions,	and	clariﬁes
+that	the	validated	Section	6a	result	works	speciﬁcally	
+because
+	
+ADX
+ﬁlters	out	the	~90%	of	the	time	SAR	would	otherwise	be	reacting
+to	noise.
+Force	Index(50)	+	Stochastic(50,10,10)
+	
+entry/exit	system:
+negative	average	edge	across	every	parameter	combination	and
+every	stop-loss	level	tested,	with	or	without	a	stop.	A	tightened
+version	(higher	thresholds,	ADX+volatility	ﬁlters	added)	looked
+much	better	on	real	data	(avg	net	+$0.55	to	+$0.91/trade)	but
+showed	
+33.8%	ruin
+	
+on	bootstrap	validation	—	rejected.
+Extreme	leverage	strategies
+	
+(500x	accounts,	“double	in	a	day,”
+tight-stop/large-TP	asymmetry):	none	produce	a	viable	strategy	—
+the	mathematics	show	these	trade	a	small	chance	of	a	large	gain
+against	near-certain-to-majority	chance	of	ruin,	and	no
+restructuring	of	stop	placement	or	reward	ratio	escapes	that	trade-
+--- PAGE 4 ---
+oﬀ,	because	it	reﬂects	a	genuine	property	of	the	underlying	price
+data	(veriﬁed	with	an	empirical,	bootstrap-tested	“race
+probability”	test),	not	a	ﬁxable	parameter	choice.
+Critical	caveats	—	read	before	acting	on
+any	of	this
+1.	
+All	bootstrap	testing	resamples	day-blocks	from	the	same
+original	5-month	sample
+	
+(Dec	2025–May	2026).	This	tests
+robustness	to	diﬀerent	
+orderings
+	
+of	days	we’ve	already	seen,	not
+performance	in	a	genuinely	diﬀerent	market	regime	(a	volatility
+spike,	an	extended	one-directional	move,	a	structurally	diﬀerent
+period)	that	never	appeared	in	this	window.	It	is	a	meaningfully
+weaker	guarantee	than	true	out-of-sample	data	from	a	separate
+time	period.
+2.	
+Transaction	costs	are	an	assumption
+	
+($0.35/oz	round-trip,	a
+typical	retail/ECN	estimate),	not	your	actual	broker’s	conﬁrmed
+ﬁgure.	Conﬁrm	this	before	trusting	the	exact	dollar/percentage
+outcomes	—	these	strategies	trade	frequently	enough	that	real
+costs	materially	aﬀect	the	result.
+3.	
+The	monthly	rates	above	are	compounded	projections	from	a
+6-month	median,	not	independently	validated	month-by-
+month	ﬁgures.
+	
+Real	month-to-month	results	will	be	lumpier	—
+most	days	have	zero	trades,	and	a	small	number	of	trades	drive
+each	period’s	result.
+4.	
+21-22%	monthly,	compounded,	is	an	extraordinary	implied
+annual	rate
+	
+(well	over	1,000%	annualized).	Treat	this	as	what	the
+validated	backtest	data	shows	for	this	speciﬁc	instrument	and
+window,	not	as	a	guaranteed	or	even	likely	forward	rate.	Every
+professional	benchmark	for	real,	sustained	trading	returns
+operates	at	a	small	fraction	of	this.
+5.	
+None	of	this	has	been	tested	at	scaled	position	sizes.
+	
+All
+results	assume	the	base	0.01	lot.	Earlier	analysis	in	this
+conversation	showed	that	scaling	position	size	and	account	size
+together	(e.g.,	0.1	lot	/	$2,000)	preserves	the	same	
+percentage
+risk/return	proﬁle	mathematically	—	it	does	not	create	a	better
+rate,	just	a	bigger	absolute	number	at	the	same	odds.
+6.	
+Recommended	before	live	trading	(per	the	strategy	ﬁle
+itself):
+	
+paper	trade	for	2-4	weeks,	track	every	trade	against	the
+exact	rules,	and	ideally	validate	against	a	genuinely	separate
+chunk	of	real	data	this	analysis	never	touched,	before	committing
+real	capital.
