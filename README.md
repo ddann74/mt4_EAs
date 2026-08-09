@@ -67,6 +67,20 @@ All formulas are hand-rolled (no black-box library calls in the shipped
 code) so the logic stays transliterable to MQL4 by a human later. The
 MQL4 port itself is not part of this phase — see `docs/PRD.md` §4.
 
+## Seeing it work
+
+```bash
+python scripts/demo.py                        # synthetic data, clearly labeled as such
+python scripts/demo.py --csv path/to/data.csv  # real OHLCV data you supply (open,high,low,close,volume columns)
+```
+
+Runs every indicator + all 4 signal variants end to end and prints a
+summary. This is the fastest way to see real output without writing any
+code - and the natural place to point real XAUUSD data at, once you
+have some (e.g. exported from an MT4 terminal), to finally close the
+"never run against real data" gap noted throughout this README and
+`docs/PRD.md` §5.
+
 ## Running the tests
 
 ```bash

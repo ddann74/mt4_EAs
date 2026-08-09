@@ -99,8 +99,29 @@ Tracking against docs/PRD.md §9 success criteria.
 - [x] `pyproject.toml` + `.github/workflows/ci.yml` — added so this
       becomes a real installable package and gets CI test+mypy runs the
       moment it has a remote to push to (currently local-only).
+- [x] `bandit -r xauusd_indicators` run and reviewed: 10 low-severity
+      `B101` (assert-used) findings, all in the invariant-guard asserts
+      added for the mypy pass above. Reviewed, not suppressed: these
+      guard internal state-machine invariants, not untrusted input, and
+      even if stripped under `python -O` the next line would raise a
+      TypeError immediately (arithmetic on None) rather than proceeding
+      unsafely - so the practical risk is a worse error message under
+      `-O`, not incorrect behavior. Accepted as-is.
+- [x] `scripts/demo.py` — runs the full pipeline end to end (all
+      indicators + all 4 variants' entry signal counts) against either
+      synthetic data (default, clearly labeled) or a user-supplied CSV
+      via `--csv`. Actually run during development against both a
+      synthetic series and a hand-built CSV, output verified sane
+      (Section 7's counts exactly match Section 2's, as they should
+      since they share the same entry function - see
+      `tests/test_pipeline.py`). Also the natural place to point real
+      XAUUSD data at, once available, per docs/PRD.md §5.
+- [x] Top-level `xauusd_indicators/__init__.py` now exports
+      `compute_all_indicators`/`entry_signal`/`exit_fired`/`Variant`
+      directly, so `import xauusd_indicators as xi; xi.compute_all_indicators(df)`
+      works without knowing the internal module layout.
 
-**69/69 tests passing, mypy clean.**
+**69/69 tests passing, mypy clean, bandit reviewed.**
 
 ## Still open (blocking full "done", per docs/PRD.md §6)
 
