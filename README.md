@@ -120,11 +120,30 @@ To re-run the real-data validation yourself: place an OHLCV CSV
 point `XAUUSD_REAL_CSV` at a different path, then run
 `pytest tests/test_real_data_smoke.py -v` or `scripts/demo.py --csv`.
 
-## What's NOT in this project
+## MQL4 live-trading port
 
-- No backtest engine, P&L simulation, bootstrap/Monte-Carlo validation,
-  position sizing, order execution, or broker/MT4 integration.
+`mql4/` is a real, DEMO-ACCOUNT-ONLY MQL4 Expert Advisor port of every
+indicator and signal variant above, plus real order execution — the
+piece explicitly out of scope for the rest of this README (built at
+the user's explicit request; see `mql4/README.md` for the full
+picture). It has never been compiled — this sandbox has no MQL4
+compiler — but every formula was independently cross-checked in a
+second, separate Python implementation against the real, tested
+`xauusd_indicators` package (`mql4/verification/*.py`, runnable and
+passing as of this writing). The order-execution code itself has no
+such cross-check (no Python equivalent exists to check it against) and
+is the least-verified part of this whole project. Read
+`mql4/README.md` before using this, even on a demo account.
+
+## What's NOT in this project (the Python library above)
+
+- No backtest engine, P&L simulation, or bootstrap/Monte-Carlo
+  validation — the source report already did that; reproducing it is
+  out of scope here.
 - No claim that this code reproduces the source report's performance
   numbers, or that the real-data entry-signal counts above represent a
   profitable (or even sensible) trading outcome — only that the code
   runs correctly and produces sane values.
+- Position sizing beyond a fixed lot size, order execution, and broker/
+  MT4 integration are handled by `mql4/` above, not by this Python
+  library, which stops at signal generation per `docs/PRD.md` §0.

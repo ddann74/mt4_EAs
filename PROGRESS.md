@@ -199,5 +199,48 @@ hand-computed tests are still the correctness proof) or say anything
 about whether the signals these interpretations produce would have been
 profitable.
 
-**Not started**: the MQL4/MT4 port itself (explicit non-goal of this
-phase, PRD §4/§0).
+**MQL4/MT4 port — built 2026-08-09, at the user's explicit request**
+(this was an explicit non-goal of the original phase, PRD §4/§0 — the
+user chose to move into that separate phase). Real order execution now
+exists (`mql4/Experts/XAUUSD_Report_EA.mq4`), built for a DEMO ACCOUNT
+ONLY, with the same UNCONFIRMED placeholder risk parameters carried
+over unchanged (not replaced with real numbers, since none were
+supplied). Full detail, safety notes, and exactly what is/isn't
+verified: `mql4/README.md`.
+
+**Verification actually run** (this sandbox has no MQL4 compiler, so
+this is the strongest check available without one — see
+`mql4/README.md` for why it's real evidence, not a rubber stamp, and
+what it does and doesn't prove): every indicator formula and
+entry/exit condition in the `.mqh` files was independently
+transliterated into a second, separate Python implementation (never by
+importing the real `xauusd_indicators` code, which would make the
+check circular) and run against the real, tested package on the same
+synthetic data.
+- `mql4/verification/verify_mql4_port.py` — all 7 indicators, 400 bars,
+  agree to 1e-9 between the real package and the shadow transliteration.
+- `mql4/verification/verify_mql4_signals.py` — Section 2/6/6a entry
+  composition matches bar-for-bar.
+- `mql4/verification/verify_mql4_exits.py` — 7 engineered scenarios
+  (hard stop, trailing stop, RVI reversal, $15 target, 30-bar cutoff,
+  both Section 2's and Section 7's exit composition) all match.
+
+All three pass as of this writing, and are real, run, checked-in
+scripts — not a one-off claim.
+
+**Not verified, and disclosed as such rather than assumed away:** the
+`.mq4`/`.mqh` files have never been compiled in real MetaEditor — MQL4
+syntax/type/array rules a Python transliteration cannot catch a
+violation of. The order-execution and position-management code in
+`XAUUSD_Report_EA.mq4` (new-bar detection, `OpenPosition`/
+`ClosePosition`, the demo-account safety check) has *no* cross-check of
+any kind — it's genuinely new code with no Python equivalent to
+transliterate against, since the Python project never modeled real
+orders at all. This is the highest-risk, least-verified part of the
+whole port. See `mql4/README.md`'s "Before using this, even on demo"
+section for the real manual verification steps (compile it, cross-check
+against `scripts/demo.py`'s output on the same data, run it in
+Strategy Tester before any forward test, then forward-test on demo
+before ever considering the unresolved placeholder parameters "settled
+enough" to think about — which would need its own separate, explicit
+decision, not an assumption carried over from this one).
