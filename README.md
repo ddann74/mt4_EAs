@@ -60,6 +60,36 @@ underlying module already proves.
 | Section 6a | `signals/section6a.py` (Section 2 + Parabolic SAR agreement) | same as Section 2 |
 | Section 7 | same entry as Section 2 | `signals/section7.py` — $15 target / 30-bar cutoff, **exit composition and the $15→price conversion are both UNCONFIRMED, see the module docstring** |
 
+## Extreme-reading alarm (Stochastic + Force Index) — NOT from the source report
+
+Added later, at the user's explicit request - unlike everything above,
+this isn't derived from the "XAUUSD Strategy Analysis" report. Lives in
+its own `xauusd_indicators/alarms/` package specifically so it's never
+mistaken for report-derived work. Full spec: `docs/PRD.md` §10.
+
+| Indicator | Params | Fires when |
+|---|---|---|
+| Slow Stochastic | (50, 10, 10) - MT4's own %K period/%K slowing/%D period order | `STOCHASTIC_OVERBOUGHT`: **both** %K and %D `> 90`. `STOCHASTIC_OVERSOLD`: **both** `< 10`. (Requiring both lines together was an explicit user choice, not the default reading.) |
+| Force Index | EMA(50) | `FORCE_INDEX_HIGH`: `> 70`. `FORCE_INDEX_LOW`: `< -70`. |
+
+The two are evaluated independently - a bar can fire one, both, or
+neither; they don't need to agree with each other the way Section
+6/6a's momentum filters need to agree with a trade direction. This is a
+threshold-crossing **alarm**, not a signal-composition variant: it
+doesn't return LONG/SHORT/FLAT and isn't wired into
+`entry_signal()`/`exit_fired()` - `pipeline.compute_all_indicators()`
+adds it as an `extreme_alarms` column (list of whatever fired that bar,
+empty list otherwise), and `scripts/demo.py` prints alarm counts
+alongside the entry-signal counts.
+
+A real bug was caught before shipping this one, same category as the
+ADX bug above: Force Index's raw series is NaN on its first bar (no
+previous close), and naively reusing `macd.py`'s EMA helper as-is would
+have seeded the whole recursion on that NaN and poisoned every value
+forever - fixed with a dedicated NaN-aware seeding helper in
+`indicators/force_index.py` (see its docstring). Not part of the MQL4
+port yet (`mql4/` predates this alarm) - see `docs/PRD.md` §10.4.
+
 ## MT4/MQL4 portability
 
 Every indicator ships two implementations: a vectorized pandas version
@@ -108,7 +138,7 @@ PYTHONPATH=. pytest tests/ -v
 mypy xauusd_indicators --ignore-missing-imports
 ```
 
-75/75 tests passing (69 synthetic/hand-computed + 6 real-data smoke,
+89/89 tests passing (83 synthetic/hand-computed + 6 real-data smoke,
 the latter auto-skip without a local data file), mypy clean, as of the
 last update to this file. Runs in CI on every push
 (`.github/workflows/ci.yml`) once this repo has a remote — the 6

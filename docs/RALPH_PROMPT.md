@@ -36,6 +36,11 @@ success-criterion item in the PRD is checked off or genuinely blocked:
    parameters, Section 7 exit composition) and can't resolve it from the
    source report text alone, STOP the loop and surface the exact
    question — do not silently choose an interpretation and keep going.
+   §10 (the user-added Stochastic/Force Index alarm) is NOT from the
+   source report at all, so this rule applies differently there: if you
+   hit an ambiguity in §10 the user hasn't already settled in the PRD
+   text itself, STOP and ask the user directly — there's no report text
+   to fall back on resolving it from either way.
 8. If you hit something structurally blocked (e.g. no real market data
    reachable from this environment, per PRD §5), implement against the
    PRD's defined fallback (labeled synthetic fixtures), note the

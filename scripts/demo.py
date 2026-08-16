@@ -70,7 +70,10 @@ def main() -> None:
 
     enriched = compute_all_indicators(df)
     print("\nLast 5 bars with all indicators:")
-    cols = ["close", "atr", "volatility_ratio", "adx", "rvi", "roc", "obv_slope", "macd_histogram", "parabolic_sar"]
+    cols = [
+        "close", "atr", "volatility_ratio", "adx", "rvi", "roc", "obv_slope", "macd_histogram",
+        "parabolic_sar", "stochastic_k", "stochastic_d", "force_index",
+    ]
     with pd.option_context("display.width", 160, "display.max_columns", None):
         print(enriched[cols].tail(5).round(4))
 
@@ -80,6 +83,20 @@ def main() -> None:
         long_count = sum(1 for s in signals if s == Signal.LONG)
         short_count = sum(1 for s in signals if s == Signal.SHORT)
         print(f"  {variant.value:12s} LONG={long_count:3d}  SHORT={short_count:3d}")
+
+    print(
+        "\nExtreme alarm counts (Stochastic(50,10,10) >90/<10 both lines, "
+        "Force Index(50) >70/<-70 - user-added, not from the source report, see docs/PRD.md §10):"
+    )
+    alarm_counts: dict[str, int] = {}
+    for alarms in enriched["extreme_alarms"]:
+        for alarm in alarms:
+            alarm_counts[alarm.value] = alarm_counts.get(alarm.value, 0) + 1
+    if alarm_counts:
+        for name, count in sorted(alarm_counts.items()):
+            print(f"  {name:24s} {count:3d}")
+    else:
+        print("  (none fired on this data)")
 
     print(
         "\nReminder: these are entry signals only, computed on the data above. "

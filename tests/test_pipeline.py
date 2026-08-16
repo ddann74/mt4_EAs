@@ -5,7 +5,9 @@ covered by each module's own tests)."""
 import pandas as pd
 
 from tests.fixtures import synthetic_series_df
+from xauusd_indicators.alarms.extremes import evaluate_extremes
 from xauusd_indicators.indicators.adx import adx
+from xauusd_indicators.indicators.stochastic import stochastic
 from xauusd_indicators.pipeline import Variant, compute_all_indicators, entry_signal, exit_fired
 from xauusd_indicators.signals.section2 import entry_signal as section2_entry
 from xauusd_indicators.types import PositionState, Signal
@@ -28,6 +30,10 @@ def test_compute_all_indicators_adds_expected_columns_without_mutating_input():
         "macd_histogram",
         "parabolic_sar",
         "parabolic_sar_direction",
+        "stochastic_k",
+        "stochastic_d",
+        "force_index",
+        "extreme_alarms",
     }
     assert expected_new_columns.issubset(set(result.columns))
     assert list(df.columns) == original_columns, "compute_all_indicators must not mutate its input"
@@ -39,6 +45,22 @@ def test_compute_all_indicators_adx_column_matches_calling_adx_directly():
     result = compute_all_indicators(df)
     expected = adx(df)
     pd.testing.assert_series_equal(result["adx"], expected, check_names=False)
+
+
+def test_compute_all_indicators_extreme_alarms_column_matches_calling_extremes_directly():
+    df = synthetic_series_df(n=100)
+    result = compute_all_indicators(df)
+    expected_k, expected_d = stochastic(df)
+    pd.testing.assert_series_equal(result["stochastic_k"], expected_k, check_names=False)
+    pd.testing.assert_series_equal(result["stochastic_d"], expected_d, check_names=False)
+    for i in range(len(df)):
+        assert set(result["extreme_alarms"].iloc[i]) == set(
+            evaluate_extremes(
+                None if pd.isna(expected_k.iloc[i]) else expected_k.iloc[i],
+                None if pd.isna(expected_d.iloc[i]) else expected_d.iloc[i],
+                None if pd.isna(result["force_index"].iloc[i]) else result["force_index"].iloc[i],
+            )
+        )
 
 
 def test_entry_signal_dispatches_to_section2_for_variant_section_2():

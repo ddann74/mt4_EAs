@@ -304,3 +304,101 @@ and tested against a specific, documented interpretation" - it does
 NOT mean the 5 UNCONFIRMED interpretations in §6 have been verified
 against the report's actual original intent, only that they're no
 longer blocking further work, per the user's explicit choices.
+
+## 10. User-added alarm: Stochastic + Force Index extremes (NOT from the source report)
+
+Added after the rest of this PRD was written and implemented, at the
+user's explicit request - unlike §2's seven indicators and §3's four
+signal variants, nothing below comes from the source XAUUSD Strategy
+Analysis report. Kept in its own section, its own package
+(`xauusd_indicators/alarms/`, alongside `indicators/`/`signals/` rather
+than inside either), for the same reason §0 draws a hard line around
+what this project is/isn't: so "report-derived" and "user-added" stay
+visibly distinct rather than blurring together.
+
+### 10.1 Stochastic Oscillator (50, 10, 10)
+
+Standard "Slow Stochastic" formula, parameterized (%K period, %K
+slowing, %D period) - the same three-number order MT4's own
+`iStochastic()` uses. User specified 50/10/10.
+
+```
+raw %K  = 100 * (close - lowest_low(50)) / (highest_high(50) - lowest_low(50))
+slow %K = SMA(raw %K, 10)      <- what MT4 actually plots as "%K"
+%D      = SMA(slow %K, 10)
+```
+
+Unlike RVI (§2.3), this is **not** an open question - "50,10,10" is
+unambiguous notation for a well-known indicator, not an inferred reading
+of ambiguous report prose. `indicators/stochastic.py`.
+
+### 10.2 Force Index (50)
+
+Elder's standard definition: raw Force Index = `(close[t] - close[t-1])
+* volume[t]`, EMA-smoothed. User specified period 50.
+`indicators/force_index.py`.
+
+### 10.3 Alarm thresholds and composition
+
+- **Stochastic**: fires `STOCHASTIC_OVERBOUGHT` when **both** slow %K
+  and %D are `> 90`; fires `STOCHASTIC_OVERSOLD` when **both** are `<
+  10`. Exactly at 90/10 does not fire ("over"/"under", not
+  "at-or-beyond"). Requiring both lines together, rather than either
+  line alone or %K alone, was an explicit user choice made when asked -
+  see `alarms/extremes.py`'s module docstring.
+- **Force Index**: fires `FORCE_INDEX_HIGH` when `> 70`; fires
+  `FORCE_INDEX_LOW` when `< -70`. Exactly at ±70 does not fire.
+- Stochastic and Force Index are evaluated **independently** - a bar can
+  fire one, the other, both, or neither. Unlike §3's Section 6/6a
+  filters (which require several indicators to *agree* with a trade
+  direction before anything fires), these two alarms don't need to agree
+  with each other; they're flagging two different, unrelated readings
+  (range-relative exhaustion vs. raw pressure momentum), not composing
+  toward a single trade decision.
+- This is an **alarm**, not a signal-composition variant: it doesn't
+  return LONG/SHORT/FLAT or feed into `entry_signal()`/`exit_fired()`
+  (§3's dispatch). It's a standalone "worth looking at this bar" flag,
+  same spirit as the Android `rvi-adx-forex-alarm` app (a separate
+  project on this account) alerting on a condition without placing or
+  managing a trade itself.
+
+### 10.4 Non-goals for this section
+
+- **No MQL4 port yet.** `mql4/` (§4's eventual-goal phase, built at a
+  separate earlier explicit user request) does not include this alarm.
+  If/when it's needed there, it follows the same pattern every other
+  indicator there already does - see `mql4/README.md`.
+- **No position sizing, entry/exit, or trade management** - same scope
+  boundary as §0/§3: this is a threshold-crossing flag, not a strategy.
+- **No backtesting or profitability claim** of any kind for these
+  thresholds - same §0 boundary as the rest of this project.
+
+### 10.5 Success criteria
+
+- [x] `stochastic()`/`stochastic_update()` match an independent
+      hand-derivation on synthetic data, and the raw %K component
+      matches `ta.momentum.StochasticOscillator` (partial cross-check
+      only - `ta` has no 3-parameter Slow Stochastic mode to compare
+      the full composition against; see `tests/test_stochastic.py`'s
+      module docstring for why). `tests/test_stochastic.py`.
+- [x] `force_index()`/`force_index_update()` match an independent
+      hand-derivation on synthetic data AND `ta.volume.ForceIndexIndicator`
+      exactly (once a documented, one-bar masking-convention difference
+      from this project's own `macd.py::ema()` is accounted for - see
+      `indicators/force_index.py`'s docstring). `tests/test_force_index.py`.
+- [x] `evaluate_extremes()` covers every branch: each alarm firing alone
+      on engineered values, both stochastic lines required together
+      (one alone never fires), exact-threshold values not firing, two
+      alarms able to fire on the same bar, `None`/still-warming-up
+      inputs never firing. `tests/test_alarms_extremes.py`.
+- [x] `extremes()` (DataFrame), `extremes_update()` (incremental), and
+      `evaluate_extremes()` (pure decision function) agree with each
+      other on every bar of a real computed synthetic series, warmup
+      region included - not just on hand-picked numbers.
+      `tests/test_alarms_extremes.py`.
+- [x] `pipeline.compute_all_indicators()` includes the new columns
+      (`stochastic_k`, `stochastic_d`, `force_index`, `extreme_alarms`);
+      `scripts/demo.py` prints alarm counts alongside the existing
+      per-variant entry-signal counts. `tests/test_pipeline.py`.
+
+**All 5 items done.** See PROGRESS.md for the corresponding entry.

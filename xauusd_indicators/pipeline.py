@@ -12,13 +12,16 @@ from typing import Callable
 
 import pandas as pd
 
+from .alarms.extremes import extremes_trigger
 from .indicators.adx import adx
 from .indicators.atr import atr, volatility_ratio
+from .indicators.force_index import force_index
 from .indicators.macd import macd_histogram
 from .indicators.obv import obv, obv_slope
 from .indicators.parabolic_sar import parabolic_sar, parabolic_sar_direction
 from .indicators.roc import roc
 from .indicators.rvi import rvi, rvi_trigger
+from .indicators.stochastic import stochastic
 from .signals import section2, section6, section6a, section7
 
 
@@ -40,6 +43,13 @@ def compute_all_indicators(df: pd.DataFrame) -> pd.DataFrame:
     out["macd_histogram"] = macd_histogram(df)
     out["parabolic_sar"] = parabolic_sar(df)
     out["parabolic_sar_direction"] = parabolic_sar_direction(df)
+    # Stochastic(50,10,10) and Force Index(50) - the user-added extreme-
+    # reading alarm (docs/PRD.md §10), not part of the source report's own
+    # four signal variants above. "extreme_alarms" holds a list[ExtremeAlarm]
+    # per bar (empty where nothing fires) - see xauusd_indicators.alarms.extremes.
+    out["stochastic_k"], out["stochastic_d"] = stochastic(df)
+    out["force_index"] = force_index(df)
+    out["extreme_alarms"] = extremes_trigger(out["stochastic_k"], out["stochastic_d"], out["force_index"])
     return out
 
 

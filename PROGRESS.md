@@ -167,6 +167,86 @@ Tracking against docs/PRD.md §9 success criteria.
 **75/75 tests passing (69 synthetic/hand-computed + 6 real-data
 smoke), mypy clean, bandit reviewed.**
 
+## User-added alarm: Stochastic(50,10,10) + Force Index(50) extremes (docs/PRD.md §10)
+
+Not from the source report - added at the user's explicit request, in
+its own `xauusd_indicators/alarms/` package rather than folded into
+`indicators/`/`signals/`, so report-derived and user-added work stay
+visibly distinct (§10's own opening note explains why).
+
+- [x] `indicators/stochastic.py` (+ incremental) — Slow Stochastic
+      (%K period/slowing/%D period = 50/10/10, MT4's own parameter
+      order). Independent hand-derivation (fresh rolling min/max/mean,
+      not reusing the module's own logic) matches exactly on a 150-bar
+      synthetic series. The raw %K component (no slowing) additionally
+      cross-checks against `ta.momentum.StochasticOscillator` with
+      `smooth_window=1` — exact match; `ta` has no 3-parameter
+      Slow-Stochastic mode, so this is a partial cross-check of the core
+      formula, not the full %K-slowing/%D composition (that's the hand-
+      derivation's job). One disclosed, narrow vectorized/incremental
+      divergence: a completely flat 50-bar window (zero range) is
+      guarded to 50.0 in the incremental path only, since a pure-Python
+      float division by zero raises where numpy/pandas would silently
+      give inf/nan — not expected to be hit by any of this project's
+      fixtures. `tests/test_stochastic.py` (3 tests).
+- [x] `indicators/force_index.py` (+ incremental) — Elder's Force Index,
+      EMA(50)-smoothed. **A real, caught-before-shipping bug**: the raw
+      series (`close.diff() * volume`) is NaN on its very first bar (no
+      previous close) — naively reusing `macd.py`'s `_ema_full()` as-is
+      would have seeded the whole EMA recursion on that NaN and poisoned
+      every value forever (`alpha*x + (1-alpha)*NaN` is NaN,
+      unconditionally). Same bug class `adx.py::_wilder_smooth` already
+      had to fix once for a NaN-prefixed DX input — caught here by
+      working through the seeding logic before writing the test, not by
+      a failing test. Fixed with a dedicated
+      `_ema_seeded_at_first_valid()` helper. Hand-derivation matches
+      exactly; `ta.volume.ForceIndexIndicator` cross-check also matches
+      exactly once a real, empirically-verified masking-convention
+      difference is accounted for — `ta` hides one bar more for this
+      specific indicator class than `macd.py::ema()`'s own convention
+      does (first valid at index `period`, not `period - 1`); this
+      module deliberately matches `ta`'s convention, documented in the
+      module docstring, for the same "exact cross-check, no fighting a
+      seeding mismatch" reasoning `macd.py` already gives for its own
+      choice. `tests/test_force_index.py` (3 tests).
+- [x] `alarms/extremes.py` — `evaluate_extremes()` (pure decision
+      function, mirrors this account's ad-blocker project's
+      `FilterEngine.evaluate()` shape) plus `extremes()`
+      (DataFrame)/`extremes_update()` (incremental) wrappers, all three
+      proven to agree with each other on real computed synthetic data,
+      not just hand-picked numbers. Stochastic requires **both** %K and
+      %D past 90/10 (user's explicit choice, confirmed when asked, over
+      "either line" or "%K only"); Force Index fires independently past
+      ±70; a bar can fire one, both, or neither — no requirement that
+      the two agree with each other, unlike the report's own Section
+      6/6a agreement filters. Exact-threshold values (90, 10, ±70) do
+      not fire. `tests/test_alarms_extremes.py` (7 tests).
+- [x] `pipeline.py` — `compute_all_indicators()` gains `stochastic_k`/
+      `stochastic_d`/`force_index`/`extreme_alarms` columns;
+      `scripts/demo.py` prints alarm counts alongside the existing
+      per-variant entry-signal counts. Run against 400 synthetic bars
+      during development: produced 40 `stochastic_overbought` firings,
+      0 of the other three — plausible, non-degenerate output, not
+      independently verified further (same "sane, not certified
+      profitable" standard as every other demo run in this project).
+      `tests/test_pipeline.py` (+1 test).
+
+**14 new tests, all passing (3 stochastic + 3 force index + 7 alarm
+decision logic + 1 pipeline). Full suite: 89 collected, 83 passing + 6
+real-data-skip (same skip-without-local-CSV behavior as before, unrelated
+to this work).** `mypy xauusd_indicators --ignore-missing-imports` —
+clean, no new errors introduced.
+
+**Not done, disclosed rather than silently skipped:**
+- No MQL4 port for this alarm (`mql4/` doesn't cover §10 — see PRD
+  §10.4). If needed there later, it follows the same
+  transliterate-and-verify pattern the other 7 indicators already went
+  through.
+- No real-XAUUSD-data run for these two indicators specifically — the
+  existing `tests/test_real_data_smoke.py` suite predates this alarm
+  and doesn't exercise it; extending that smoke test to cover §10 would
+  be the natural next step if/when real data validation matters for it.
+
 ## Still open (blocking full "done", per docs/PRD.md §6)
 
 None of the 5 open questions are hard-blocked anymore — all were
